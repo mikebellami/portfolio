@@ -36,11 +36,45 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   animateRing();
 
-  // ── Nav scroll shadow ──
+  // ── Nav: scroll shadow + section-aware background ──
   const navbar = document.getElementById('navbar');
-  window.addEventListener('scroll', () => {
-    navbar.classList.toggle('scrolled', window.scrollY > 20);
-  });
+
+  // Define which sections use which nav style
+  // 'dark' = ink bg sections, 'alt' = cream-dark sections, '' = default cream
+  const sectionNavStyle = {
+    hero:     '',
+    about:    '',
+    skills:   'alt',
+    projects: '',
+    contact:  'dark',
+  };
+
+  function updateNav() {
+    const scrollY = window.scrollY;
+    navbar.classList.toggle('scrolled', scrollY > 20);
+
+    // Find which section the top of viewport is inside
+    let currentStyle = '';
+    const allSections = [
+      { id: 'hero', el: document.querySelector('.hero') },
+      ...Array.from(document.querySelectorAll('section[id]')).map(el => ({ id: el.id, el }))
+    ];
+
+    for (const { id, el } of allSections) {
+      if (!el) continue;
+      const top = el.offsetTop - 100;
+      const bottom = top + el.offsetHeight;
+      if (scrollY >= top && scrollY < bottom) {
+        currentStyle = sectionNavStyle[id] ?? '';
+      }
+    }
+
+    navbar.classList.toggle('nav-dark', currentStyle === 'dark');
+    navbar.classList.toggle('nav-alt', currentStyle === 'alt');
+  }
+
+  window.addEventListener('scroll', updateNav, { passive: true });
+  updateNav();
 
   // ── Mobile Menu ──
   const mobileMenu = document.querySelector('.mobile-menu');
@@ -89,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // ── Copyright year ──
+  // ── Dynamic copyright year ──
   document.getElementById('copyright-year').textContent = new Date().getFullYear();
 
 });
